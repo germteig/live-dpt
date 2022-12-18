@@ -5,6 +5,7 @@ import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.QoS;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,10 +45,15 @@ public class Application {
         mqtt.setHost("localhost", 1883);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
-        execution.getVariable(order_id);
-        String value = String.valueOf(execution.getVariable(power_usage));
-        connection.publish(topic, value.getBytes(), QoS.AT_LEAST_ONCE, false);
-        LOGGER.debug("Published {} to {}");
+        final Object RFID = execution.getVariable(order_id);
+        final Object POWERUSE = String.valueOf(execution.getVariable(power_usage));
+        final Object MASCHINE = String.valueOf(name);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("order-id", RFID);
+        jsonObject.put("machine-name", MASCHINE);
+        jsonObject.put("power-consumption", POWERUSE);
+        connection.publish(topic, jsonObject.toString().getBytes(), QoS.AT_LEAST_ONCE, false);
+        LOGGER.debug("Published {} to {}", POWERUSE, topic);
     };
   }
 }
