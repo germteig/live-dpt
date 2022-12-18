@@ -7,6 +7,7 @@ import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.QoS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,9 @@ public class Application {
     private static final String order_id = "rfidID";
     private static final String name = "Stampfmaschine";
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
+
+    @Value("${my-project.topic}")
+    private String topic;
 
   public static void main(String... args) {
     SpringApplication.run(Application.class, args);
@@ -35,14 +39,14 @@ public class Application {
   @Bean
   public JavaDelegate helloMQTT(){
     return execution -> {
-      LOGGER.debug("Starting with MQTT");
+        LOGGER.debug("Starting with MQTT");
         final MQTT mqtt = new MQTT();
         mqtt.setHost("localhost", 1883);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
         execution.getVariable(order_id);
         String value = String.valueOf(execution.getVariable(power_usage));
-        connection.publish("Stampfmaschine/Stromverbrauch", value.getBytes(), QoS.AT_LEAST_ONCE, false);
+        connection.publish(topic, value.getBytes(), QoS.AT_LEAST_ONCE, false);
         LOGGER.debug("Published {} to {}");
     };
   }
